@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lua: ["5.1", "5.2", "5.3", "5.4", "luajit-2.1"]
+        lua: ["5.1", "5.2", "5.3", "5.4"]
     steps:
       - uses: actions/checkout@v4
       - uses: leafo/gh-actions-lua@v11
@@ -25,6 +25,23 @@ jobs:
       - run: luarocks install etlua
       - run: busted -o utfTerminal
       - run: lua test/smoke.lua
+
+  # The luarocks.org manifest now has more constants than LuaJIT can load,
+  # so luarocks runs on PUC Lua 5.1 and the tests run under LuaJIT 2.1.
+  luajit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leafo/gh-actions-lua@v11
+        with:
+          luaVersion: "5.1"
+      - uses: leafo/gh-actions-luarocks@v5
+      - run: sudo apt-get update && sudo apt-get install -y luajit
+      - run: luarocks install busted
+      - run: luarocks install etlua
+      - run: luajit -v
+      - run: busted --lua=luajit -o utfTerminal
+      - run: luajit -e 'assert(jit, "not LuaJIT")' && luajit test/smoke.lua
 
   lint:
     runs-on: ubuntu-24.04
