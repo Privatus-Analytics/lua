@@ -539,20 +539,24 @@ local function inline_script(code, overrides)
   return opening .. code .. "</script>"
 end
 
--- The queue stub script on its own (nonce included), or "" when the tag is
--- off. Use it when you print the tracker tag some other way.
+-- The queue stub script on its own (nonce included). Use it when you print
+-- the tracker tag some other way. It prints even when the tag is off, so
+-- privatus.track calls never fail.
 function M.queue_stub(overrides)
-  if not M.render(overrides) then return "" end
   return inline_script(M.QUEUE_STUB, overrides)
 end
 
 -- The tracker tag, plus the queue stub and the page props script when they
--- are on. "" without a site id or when the tag is off.
+-- are on. Without a site id or when the tag is off, it is only the queue
+-- stub (when queue_stub is on) or "". The props function is not called then.
 --
 -- overrides: any setting for this call, plus request (passed to props and
 -- nonce functions) and props (merged over the configured props).
 function M.tag(overrides)
-  if not M.render(overrides) then return "" end
+  if not M.render(overrides) then
+    if option(overrides, "queue_stub") == true then return inline_script(M.QUEUE_STUB, overrides) end
+    return ""
+  end
   local props_json = M.page_props_json(M.page_props(overrides))
   local html = {}
   if option(overrides, "queue_stub") == true then html[#html + 1] = inline_script(M.QUEUE_STUB, overrides) end
@@ -575,7 +579,7 @@ local HEAD_CLOSE = "</[Hh][Ee][Aa][Dd]>"
 -- Puts the tag just before the first </head>. Leaves the page alone when it
 -- has no </head>, already has /js/pa.js, or the tag is off.
 function M.inject(html, overrides)
-  if type(html) ~= "string" or html:find(M.MARKER, 1, true) then return html end
+  if type(html) ~= "string" or html:find(M.MARKER, 1, true) or not M.render(overrides) then return html end
   local start, finish = html:find(HEAD_CLOSE)
   if not start then return html end
   local tag = M.tag(overrides)

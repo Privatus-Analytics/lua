@@ -186,7 +186,9 @@ print(template({ privatus = privatus }))
 have as a string.
 
 In every case the tag prints nothing when there is no site id, and nothing
-outside production (see below).
+outside production (see below). The one exception is the queue stub: when it
+is on, it still prints (see [Track from your own
+JavaScript](#track-from-your-own-javascript)).
 
 ## Configuration
 
@@ -227,7 +229,7 @@ require("privatus").configure({
 | `auto_inject` | `true` | `false` turns the OpenResty filters off without removing them from `nginx.conf` |
 | `extra_attributes` | `{}` | Any other `data-*` attribute. `true` prints the name alone |
 | `props` | `{}` | Page props sent with every pageview and event. A table, or a function that gets the request. See below |
-| `queue_stub` | `false` | Prints a small script first, so `privatus.track` calls made before the tracker loads are kept and sent later |
+| `queue_stub` | `false` | Prints a small script first, so `privatus.track` calls made before the tracker loads are kept and sent later. It still prints when the tag is off, so those calls never fail |
 | `nonce` | not set | A Content Security Policy nonce for the script tags. A string, or a function that gets the request |
 | `max_buffer_size` | `2097152` (2 MB) | OpenResty filters: pages bigger than this are sent without the tag |
 
@@ -428,9 +430,12 @@ sends them once the tracker is ready:
 privatus.configure({ queue_stub = true })
 ```
 
-or for one call: `privatus.tag({ queue_stub = true })`. Like the tag, the stub
-prints only where the tag is on, so in development use
-`window.privatus && privatus.track(...)`.
+or for one call: `privatus.tag({ queue_stub = true })`. The stub prints even
+where the tag is off (in development, with `enabled = false`, or with no site
+id). Then only the stub prints: no tracker and no page props. So you can
+always call `privatus.track(...)`. In development the calls just wait in the
+queue and are never sent. The OpenResty filters still add nothing when the
+tag is off.
 
 ### See the results
 
@@ -452,6 +457,15 @@ and never send anything. Keep people out of your props and event props: no
 names, emails or user ids. See the [privacy
 documentation](https://privatusanalytics.com/docs/privacy) for what is
 collected.
+
+If you have a privacy policy, it should say which tools handle your visitors' data. You can paste this:
+
+> This website uses [Privatus Analytics](https://privatusanalytics.com/privacy-analytics) to count visits. It
+> does not use cookies and does not follow you from one website to another. Your IP address is used for a moment
+> to count visits and is never stored.
+
+Change it to fit your site. The [privacy policy generator](https://privatusanalytics.com/tools/privacy-policy-generator)
+makes a longer version with your site's name in it.
 
 ## Development
 

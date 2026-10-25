@@ -145,6 +145,42 @@ describe("the tag", function()
     assert.is_nil(privatus.tag():find("q:[]", 1, true))
     assert.equal('<script nonce="x">' .. privatus.QUEUE_STUB .. "</script>", privatus.queue_stub({ nonce = "x" }))
   end)
+
+  describe("when the tag is off", function()
+    local stub = '<script nonce="abc">' .. require("privatus").QUEUE_STUB .. "</script>"
+    local boom = function() error("should not run") end
+
+    it("prints exactly the queue stub, with the nonce, when the stub is on", function()
+      privatus.configure({ enabled = false, queue_stub = true, props = boom })
+      assert.equal(stub, privatus.tag({ nonce = "abc", props = { plan = "pro" } }))
+      assert.equal("<script>" .. privatus.QUEUE_STUB .. "</script>", privatus.tag())
+    end)
+
+    it("prints nothing when the stub is off", function()
+      privatus.configure({ enabled = false })
+      assert.equal("", privatus.tag({ nonce = "abc", props = { plan = "pro" } }))
+    end)
+
+    it("prints only the stub without a site id", function()
+      privatus.configure({ site_id = privatus.null, queue_stub = true, props = boom })
+      assert.equal(stub, privatus.tag({ nonce = "abc", props = { plan = "pro" } }))
+    end)
+
+    it("prints only the stub outside production", function()
+      privatus.configure({ enabled = privatus.null, queue_stub = true })
+      helper.env.PRIVATUS_ENV = "development"
+      assert.equal(stub, privatus.tag({ nonce = "abc" }))
+    end)
+
+    it("prints only the stub when turned off per call", function()
+      assert.equal(stub, privatus.tag({ enabled = false, queue_stub = true, nonce = "abc", props = { plan = "pro" } }))
+    end)
+
+    it("still gives the stub from queue_stub()", function()
+      privatus.configure({ enabled = false })
+      assert.equal(stub, privatus.queue_stub({ nonce = "abc" }))
+    end)
+  end)
 end)
 
 describe("inject", function()
@@ -169,6 +205,11 @@ describe("inject", function()
 
   it("leaves pages alone when the tag is off", function()
     assert.equal("<head></head>", privatus.inject("<head></head>", { enabled = false }))
+  end)
+
+  it("adds nothing when the tag is off, even with the queue stub on", function()
+    assert.equal("<head></head>", privatus.inject("<head></head>", { enabled = false, queue_stub = true }))
+    assert.equal("<head></head>", privatus.inject("<head></head>", { site_id = privatus.null, queue_stub = true }))
   end)
 
   it("keeps % signs in the tag as they are", function()

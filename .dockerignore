@@ -1,0 +1,8 @@
+.git
+.github
+*.rock
+*.src.rock
+lua-resty-privatus-*/
+*.tar.gz
+luacov.*
+SUBMISSION.md
