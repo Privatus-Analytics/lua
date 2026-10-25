@@ -11,6 +11,10 @@ jobs:
   release:
     runs-on: ubuntu-24.04
     environment: release
+    env:
+      # Optional. The OPM step below is skipped when this secret is not set.
+      # A step's own env is not visible to its `if`, so it lives on the job.
+      OPM_GITHUB_TOKEN: ${{ secrets.OPM_GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - name: Test
@@ -31,8 +35,6 @@ jobs:
           luarocks install dkjson
           luarocks upload "lua-resty-privatus-${GITHUB_REF_NAME#v}-1.rockspec" --api-key="$LUAROCKS_API_KEY"
       - name: Publish to OPM
-        env:
-          OPM_GITHUB_TOKEN: ${{ secrets.OPM_GITHUB_TOKEN }}
         if: env.OPM_GITHUB_TOKEN != ''
         run: |
           docker run --rm -v "$PWD":/src:ro -e OPM_GITHUB_TOKEN openresty/openresty:1.27.1.2-alpine-fat sh -c 'set -e
