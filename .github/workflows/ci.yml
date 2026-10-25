@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        lua: ["5.1", "5.2", "5.3", "5.4", "luajit-2.1"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leafo/gh-actions-lua@v11
+        with:
+          luaVersion: ${{ matrix.lua }}
+      - uses: leafo/gh-actions-luarocks@v5
+      - run: luarocks install busted
+      - run: luarocks install etlua
+      - run: busted -o utfTerminal
+      - run: lua test/smoke.lua
+
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leafo/gh-actions-lua@v11
+        with:
+          luaVersion: "5.4"
+      - uses: leafo/gh-actions-luarocks@v5
+      - run: luarocks install luacheck
+      - run: luacheck .
+
+  openresty:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./run-docker.sh

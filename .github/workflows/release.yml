@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test
+        run: ./run-docker.sh
+      - name: Check the tag matches the rockspec
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          test -f "lua-resty-privatus-${version}-1.rockspec"
+          grep -q "^version = ${version}$" dist.ini
+      - uses: leafo/gh-actions-lua@v11
+        with:
+          luaVersion: "5.4"
+      - uses: leafo/gh-actions-luarocks@v5
+      - name: Publish to LuaRocks
+        env:
+          LUAROCKS_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}
+        run: |
+          luarocks install dkjson
+          luarocks upload "lua-resty-privatus-${GITHUB_REF_NAME#v}-1.rockspec" --api-key="$LUAROCKS_API_KEY"
+      - name: Publish to OPM
+        env:
+          OPM_GITHUB_TOKEN: ${{ secrets.OPM_GITHUB_TOKEN }}
+        if: env.OPM_GITHUB_TOKEN != ''
+        run: |
+          docker run --rm -v "$PWD":/src:ro -e OPM_GITHUB_TOKEN openresty/openresty:1.27.1.2-alpine-fat sh -c 'set -e
+            cp -r /src /app && cd /app
+            printf "github_account = Privatus-Analytics\ngithub_token = %s\nupload_server = https://opm.openresty.org\ndownload_server = https://opm.openresty.org\n" "$OPM_GITHUB_TOKEN" > /root/.opmrc
+            opm upload
+          '
