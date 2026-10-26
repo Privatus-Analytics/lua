@@ -1,21 +1,46 @@
 # Privatus Analytics for Lua and OpenResty
 
-Adds the cookieless [Privatus Analytics](https://privatusanalytics.com)
-tracking script to Lua web apps. It works three ways:
+**Simple, private website analytics for your Lua web app. No cookies, honest numbers,
+and a dashboard you understand in seconds.**
 
-* `resty.privatus` puts the script in the `<head>` of every HTML page that
+## Why Privatus Analytics
+
+**Google Analytics is slow, confusing and hungry for data.** It sends what your
+visitors do to Google. In many countries it means showing a cookie pop-up (the box
+that asks visitors to accept cookies), and many people click "reject", so you never
+see them. Bots pad the numbers that are left.
+
+**Privatus Analytics fixes that.** It counts visits to your Lua web app without cookies and
+never stores IP addresses. Bots are filtered out before they are counted. Your
+data is never sold or shared.
+
+What you get:
+
+- **A dashboard you understand in seconds.** Visitors, top pages and where people
+  came from, all on one screen.
+- **No cookie pop-up needed for our analytics.** We set no cookies and store no
+  personal data. Laws differ by country, so check your own legal advice.
+- **Honest numbers.** Known bots and fake traffic are left out on every plan.
+- **A fast site.** The tracking script is about 3 KB, tiny next to most tracking tags.
+- **Data you own.** We never sell it or show you ads, and you can pull it out
+  any time through the API.
+
+**Start free.** The Free plan has 10,000 events a month and 3 sites, with no card.
+Every new account also gets 14 days of Pro free, with no card.
+[Create your account](https://privatusanalytics.com).
+
+## What this package does
+
+- `resty.privatus` puts the script in the `<head>` of every HTML page that
   [OpenResty](https://openresty.org) (nginx with Lua) sends.
-* `privatus.lapis` gives [Lapis](https://leafo.net/lapis/) views a few helpers.
-* `privatus` is the plain Lua core. It builds the same HTML in any Lua app,
+- `privatus.lapis` gives [Lapis](https://leafo.net/lapis/) views a few helpers.
+- `privatus` is the plain Lua core. It builds the same HTML in any Lua app,
   with no other modules needed.
+- The package only prints the browser script. It never sends events from your
+  server and sets no cookies.
 
-Privatus Analytics counts visits, sources, pages and conversions without
-cookies, local storage or fingerprinting, so analytics does not need a consent
-banner by itself. Check with your own counsel for your country.
-
-The package only prints the browser script. It never sends events from your
-server and sets no cookies. You need a Privatus Analytics account to see
-reports, and there is a free plan. Sign up at https://privatusanalytics.com.
+You need a Privatus Analytics account to see your reports, and there is a
+free plan. [Sign up at privatusanalytics.com](https://privatusanalytics.com).
 
 ## Requirements
 
@@ -130,7 +155,7 @@ location /docs/ {
 
 If a `location` has its own `header_filter_by_lua*` or `body_filter_by_lua*`
 for something else, nginx uses that one instead of the one from `http {}`.
-Call the Privatus filters from your own code there.
+Call the Privatus Analytics filters from your own code there.
 
 ### OpenResty: in your own templates
 
@@ -305,7 +330,7 @@ In a Lapis view, where `current_user` is your own value:
 
 ## Product analytics: see which features people use
 
-Privatus can show which buttons, forms and features people really use. You
+Privatus Analytics can show which buttons, forms and features people really use. You
 add a few attributes to your HTML. The tracker reads them in the browser and
 sends the events. Your server still sends nothing.
 
@@ -409,7 +434,7 @@ are safe inside a script. The JSON (the data format the script reads) is
 written by this package, so you do not need a JSON module.
 
 **Never put names, emails, user ids or anything that points to one person in
-props.** Privatus counts visitors without any id. Put groups (like the plan or
+props.** Privatus Analytics counts visitors without any id. Put groups (like the plan or
 the role), not people. The server also removes emails and long ids it finds.
 
 ### Track from your own JavaScript
